@@ -1,4 +1,4 @@
-module github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping
+module github.com/rtbenfield/opentelemetry-operations-go/internal/resourcemapping
 
 go 1.17
 

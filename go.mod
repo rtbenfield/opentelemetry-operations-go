@@ -1,4 +1,4 @@
-module github.com/GoogleCloudPlatform/opentelemetry-operations-go
+module github.com/rtbenfield/opentelemetry-operations-go
 
 go 1.17
 

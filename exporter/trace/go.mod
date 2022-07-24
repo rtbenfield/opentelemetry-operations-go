@@ -1,4 +1,4 @@
-module github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace
+module github.com/rtbenfield/opentelemetry-operations-go/exporter/trace
 
 go 1.17
 
