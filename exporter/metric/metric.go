@@ -46,6 +46,12 @@ const (
 	cloudMonitoringMetricDescriptorNameFormat = "custom.googleapis.com/opentelemetry/%s"
 )
 
+const (
+	// The number of timeserieses to send to GCM in a single request. This
+	// is a hard limit in the GCM API, so we never want to exceed 200.
+	sendBatchSize = 200
+)
+
 // key is used to judge the uniqueness of the record descriptor.
 type key struct {
 	name        string
@@ -282,14 +288,31 @@ func (me *metricExporter) exportTimeSeries(ctx context.Context, res *resource.Re
 		}
 	}
 
-	// TODO: When this exporter is rewritten, support writing to multiple
-	// projects based on the "gcp.project.id" resource.
-	req := &monitoringpb.CreateTimeSeriesRequest{
-		Name:       fmt.Sprintf("projects/%s", me.o.projectID),
-		TimeSeries: tss,
+	for len(tss) > 0 {
+		var sendSize int
+		if len(tss) < sendBatchSize {
+			sendSize = len(tss)
+		} else {
+			sendSize = sendBatchSize
+		}
+
+		var ts []*monitoringpb.TimeSeries
+		ts, tss = tss[:sendSize], tss[sendSize:]
+
+		// TODO: When this exporter is rewritten, support writing to multiple
+		// projects based on the "gcp.project.id" resource.
+		req := &monitoringpb.CreateTimeSeriesRequest{
+			Name:       fmt.Sprintf("projects/%s", me.o.projectID),
+			TimeSeries: ts,
+		}
+
+		err := me.client.CreateTimeSeries(ctx, req)
+		if err != nil {
+			return err
+		}
 	}
 
-	return me.client.CreateTimeSeries(ctx, req)
+	return nil
 }
 
 // descToMetricType converts descriptor to MetricType proto type.
